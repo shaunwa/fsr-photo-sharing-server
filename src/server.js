@@ -1,14 +1,20 @@
 import express from 'express';
 import bodyParser from 'body-parser';
+import * as admin from 'firebase-admin';
+import fileUpload from 'express-fileupload';
+import credentials from './credentials.json';
 import { db } from './db';
-import { routes } from './routes';
+import { routes, protectRoute } from './routes';
 
+admin.initializeApp({ credential: admin.credential.cert(credentials) });
 const app = express();
 
+app.use('/images', express.static(__dirname + '/uploads/'));
+app.use(fileUpload());
 app.use(bodyParser.json());
 
 routes.forEach(route => {
-    app[route.method](route.path, route.handler);
+    app[route.method](route.path, protectRoute, route.handler);
 });
 
 const start = async () => {
